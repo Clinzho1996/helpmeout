@@ -1,27 +1,32 @@
+// Background.jsx
+
 import React, { useEffect } from "react";
 
 const Background = () => {
-  // Request the desktopCapture permission in your background script
-  chrome.permissions.request(
-    {
-      permissions: ["desktopCapture"],
-    },
-    (granted) => {
-      if (granted) {
-        console.log("Desktop capture permission granted.");
-      } else {
-        console.error("Desktop capture permission denied.");
+  useEffect(() => {
+    // Listen for messages from the content script
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      if (request.action === "start_screen_sharing") {
+        // Open a new tab for screen sharing
+        chrome.tabs.create(
+          { url: chrome.runtime.getURL("selectionscreen.html") },
+          (tab) => {
+            // Store the stream in a variable so you can access it in the screenSharing.jsx page
+            const stream = request.stream;
+            chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+              if (tabId === tab.id && changeInfo.status === "complete") {
+                // Send the stream to the newly created tab
+                chrome.tabs.sendMessage(tabId, {
+                  action: "init_screen_sharing",
+                  stream: stream,
+                });
+              }
+            });
+          }
+        );
       }
-    }
-  );
-
-  // Listen for messages from the popup
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === "startScreenSharing") {
-      // Forward the message to the content script or perform other actions
-      // You can handle the screen sharing logic here
-    }
-  });
+    });
+  }, []);
 
   return <div>Background Script</div>;
 };

@@ -14,7 +14,6 @@ import { RiComputerLine } from "react-icons/ri";
 import { GoCopy } from "react-icons/go";
 import "./global.css";
 import { Button, Switch } from "@mui/material";
-import { useHistory, BrowserRouter as Router } from "react-router-dom";
 
 function Popup() {
   const [recording, setRecording] = useState(false);
@@ -53,6 +52,9 @@ function Popup() {
         const link = URL.createObjectURL(screenBlob);
         // You can use screenUrl to play or share the recording
         setScreenUrl(link);
+
+        // Send a message to the content script to stop recording
+        chrome.runtime.sendMessage({ action: "stopvideo" });
       };
 
       // Start recording
@@ -72,6 +74,7 @@ function Popup() {
       }
     }
   };
+
   const screenBlob = new Blob(screenChunks.current, {
     type: "video/webm",
   });
@@ -82,13 +85,17 @@ function Popup() {
 
   const sendVideoToBackend = async (file) => {
     try {
-      const formData = new FormData();
-      formData.append("video", file);
+      const formdata = new FormData();
+      formdata.append("title", '"myVideo"');
+      formdata.append("videoFile", file);
 
-      const response = await fetch("https://abdulhngx-cevh.onrender.com/api", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "https://vidrec.onrender.com/api/videos/save",
+        {
+          method: "POST",
+          body: formdata,
+        }
+      );
 
       if (response.ok) {
         console.log("Video uploaded successfully");
@@ -100,18 +107,13 @@ function Popup() {
     }
   };
 
-  // Call the function to send the video to the backend
-  useEffect(() => {
-    sendVideoToBackend(screenFile);
-  }, []);
-
   const stopRecording = () => {
     if (mediaRecorder.current && recording) {
+      chrome.runtime.sendMessage({ action: "stopvideo" });
       mediaRecorder.current.stop();
       screenStream.current.getTracks().forEach((track) => track.stop());
       setRecording(false);
-
-      history.push("/video");
+      sendVideoToBackend(screenFile);
     }
   };
   const handleCheckBoxChange = (e) => {
@@ -180,6 +182,7 @@ function Popup() {
       <div>
         <Button
           className="btn-record"
+          id="startScreen"
           variant="contained"
           onClick={recording ? stopRecording : startRecording}
         >

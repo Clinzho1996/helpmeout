@@ -1,17 +1,28 @@
+// Content.jsx
+
 import React from "react";
 
 function Content() {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const activeTab = tabs[0];
-    chrome.scripting.executeScript({
-      target: { tabId: activeTab.id },
-      function: () => {
-        chrome.runtime.sendMessage({ action: "startScreenSharing" });
-      },
-    });
-  });
+  async function startScreenSharing() {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+      });
 
-  return <div>Content</div>;
+      // Send the stream to your background script to start screen sharing
+      chrome.runtime.sendMessage({ action: "start_screen_sharing", stream });
+    } catch (error) {
+      console.error("Error starting screen sharing:", error);
+    }
+  }
+
+  return (
+    <div>
+      <button id="startScreen" onClick={startScreenSharing}>
+        Start Screen Sharing
+      </button>
+    </div>
+  );
 }
 
 export default Content;
