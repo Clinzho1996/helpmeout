@@ -110,12 +110,8 @@ html {
   margin-top: 20px;
 }
 
-.yes {
+.no {
   min-width: 600px;
   min-height: 439px;
-  padding: 24px 24px 32px 24px;
-}
-.no {
-  min-width: 250px;
-  padding: 24px 24px 32px 24px;
+  padding: 24px 24px 36px 24px;
 }

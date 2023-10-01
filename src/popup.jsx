@@ -17,10 +17,13 @@ function Popup() {
   const [audio, setAudio] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [file, setFile] = useState(null);
+  const [popup, setPopUp] = useState(false);
 
   const startRecording = async () => {
     try {
       // Request access to screen capture
+
+      setPopUp(true);
       const stream = await navigator.mediaDevices.getDisplayMedia({
         video: checked,
         audio: audio,
@@ -55,7 +58,6 @@ function Popup() {
 
       // Start recording
       mediaRecorder.current.start();
-
       setRecording(true);
     } catch (error) {
       console.error("Error starting screen recording:", error);
@@ -135,8 +137,9 @@ function Popup() {
     setAudio(e.target.checked);
   };
 
+  const conditionalStyling = popup ? "no" : "main";
   return (
-    <div className="main">
+    <div className={conditionalStyling}>
       <div className="header">
         <div className="logo">
           <img src="/assets/logomain.png" alt="logo" />
