@@ -1,6 +1,6 @@
 // Content.jsx
 
-import React from "react";
+import React, { useEffect } from "react";
 
 function Content() {
   async function startScreenSharing() {
@@ -16,13 +16,11 @@ function Content() {
     }
   }
 
-  return (
-    <div>
-      <button id="startScreen" onClick={startScreenSharing}>
-        Start Screen Sharing
-      </button>
-    </div>
-  );
+  useEffect(() => {
+    startScreenSharing();
+  }, []);
+
+  return <div></div>;
 }
 
 export default Content;

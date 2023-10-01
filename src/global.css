@@ -8,10 +8,7 @@ html {
 }
 .main {
   padding: 20px;
-  max-width: 250px;
   width: 250px;
-  border: none !important;
-  border-radius: 20px !important;
 }
 
 .header {

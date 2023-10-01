@@ -8,7 +8,6 @@ module.exports = {
     background: "./src/background.jsx",
     content: "./src/content.jsx",
     global: "./src/global.css",
-    selection: "./src/selection.jsx",
   },
   output: {
     path: path.resolve(__dirname, "dist"),
@@ -48,10 +47,6 @@ module.exports = {
     }),
     new CopyPlugin({
       patterns: [{ from: "public" }],
-    }),
-    new HtmlWebpackPlugin({
-      template: "./src/selection.html",
-      filename: "selection.html",
     }),
   ],
 };

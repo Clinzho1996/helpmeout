@@ -1,14 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { render } from "react-dom";
-import {
-  FiClock,
-  FiCopy,
-  FiCpu,
-  FiMic,
-  FiSettings,
-  FiVideo,
-  FiZoomIn,
-} from "react-icons/fi";
+import { FiMic, FiSettings, FiVideo } from "react-icons/fi";
 import { AiOutlineCloseCircle } from "react-icons/ai";
 import { RiComputerLine } from "react-icons/ri";
 import { GoCopy } from "react-icons/go";
@@ -24,6 +16,7 @@ function Popup() {
   const [checked, setChecked] = useState(false);
   const [audio, setAudio] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [file, setFile] = useState(null);
 
   const startRecording = async () => {
     try {
@@ -40,17 +33,20 @@ function Popup() {
       // Event handler when data becomes available (chunks of video)
       mediaRecorder.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
+          // Push the data into screenChunks
           screenChunks.current.push(event.data);
+          console.log(
+            "screenChunks size inside ondataavailable:",
+            screenChunks.current.length
+          );
         }
       };
 
-      // Event handler when recording stops
       mediaRecorder.current.onstop = () => {
         const screenBlob = new Blob(screenChunks.current, {
           type: "video/webm",
         });
         const link = URL.createObjectURL(screenBlob);
-        // You can use screenUrl to play or share the recording
         setScreenUrl(link);
 
         // Send a message to the content script to stop recording
@@ -75,22 +71,14 @@ function Popup() {
     }
   };
 
-  const screenBlob = new Blob(screenChunks.current, {
-    type: "video/webm",
-  });
-
-  const screenFile = new File([screenBlob], "recorded.webm", {
-    type: "video/webm",
-  });
-
   const sendVideoToBackend = async (file) => {
     try {
       const formdata = new FormData();
-      formdata.append("title", '"myVideo"');
+      formdata.append("title", "myVideo");
       formdata.append("videoFile", file);
 
       const response = await fetch(
-        "https://vidrec.onrender.com/api/videos/save",
+        "https://lobster-app-q4dx3.ondigitalocean.app/api/videos/save",
         {
           method: "POST",
           body: formdata,
@@ -98,6 +86,15 @@ function Popup() {
       );
 
       if (response.ok) {
+        const responseData = await response.json();
+        const videoId = responseData.videoId;
+
+        const link = document.createElement("a");
+        const encodedVideoId = encodeURIComponent(videoId);
+        link.href = `https://helpmeoutweb.vercel.app/video/${encodedVideoId}`;
+        link.innerText = "Click here to view your video";
+        link.target = "_blank";
+        document.body.appendChild(link);
         console.log("Video uploaded successfully");
       } else {
         console.error("Failed to upload video");
@@ -110,12 +107,27 @@ function Popup() {
   const stopRecording = () => {
     if (mediaRecorder.current && recording) {
       chrome.runtime.sendMessage({ action: "stopvideo" });
+
       mediaRecorder.current.stop();
       screenStream.current.getTracks().forEach((track) => track.stop());
       setRecording(false);
-      sendVideoToBackend(screenFile);
+
+      mediaRecorder.current.onstop = () => {
+        console.log("Recording stopped");
+
+        const screenBlob = new Blob(screenChunks.current, {
+          type: "video/webm",
+        });
+        const newScreenFile = new File([screenBlob], "recorded.webm", {
+          type: "video/webm",
+        });
+
+        console.log("newScreenFile:", newScreenFile);
+        sendVideoToBackend(newScreenFile);
+      };
     }
   };
+
   const handleCheckBoxChange = (e) => {
     setChecked(e.target.checked);
   };
@@ -182,22 +194,13 @@ function Popup() {
       <div>
         <Button
           className="btn-record"
-          id="startScreen"
+          id="start_screen_sharing"
           variant="contained"
           onClick={recording ? stopRecording : startRecording}
         >
           {recording ? "Stop Recording" : "Start Recording"}
         </Button>
       </div>
-      {screenUrl && (
-        <>
-          {
-            <a href={screenUrl} target="_blank" rel="noopener noreferrer">
-              {screenUrl}
-            </a>
-          }
-        </>
-      )}
     </div>
   );
 }

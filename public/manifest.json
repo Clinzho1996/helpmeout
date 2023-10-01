@@ -9,7 +9,8 @@
     "storage",
     "scripting",
     "tabs",
-    "desktopCapture"
+    "desktopCapture",
+    "audioCapture"
   ],
   "action": {
     "default_popup": "popup.html",
